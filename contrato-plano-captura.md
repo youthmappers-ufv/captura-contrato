@@ -2,6 +2,7 @@
 
 Projeto P13 — Planejador de captura de imagens de rua · Programa Youthmappers UFV
 Estado: **proposta** (versão 0.x, sujeita a mudanças sem compatibilidade até a 1.0.0) · Outubro de 2026
+Texto sob [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.pt-br); esquema, validador e exemplo sob [MIT](LICENSE).
 
 ---
 

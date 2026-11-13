@@ -61,4 +61,13 @@ plano = motor.planejar(cobertura, ajustes={"s5": "excluido"})
 
 ## Como mudar o contrato
 
-Ninguém muda o contrato sozinho. O processo está na seção 13 do documento: *issue*, registro de decisão, *pull request* que muda juntos o esquema, o documento, o exemplo, o validador e os testes, aprovação do orientador e nova etiqueta. Etiquetas publicadas nunca são movidas nem apagadas.
+Ninguém muda o contrato sozinho. O processo está na seção 13 do documento: *issue*, registro de decisão, *pull request* que muda juntos o esquema, o documento, o exemplo, o validador e os testes, aprovação do orientador e nova etiqueta. Etiquetas publicadas nunca são movidas nem apagadas. Quem contribui por *pull request* concorda em licenciar a contribuição nos mesmos termos abaixo.
+
+## Licença
+
+| Conteúdo | Licença |
+|---|---|
+| Código (`src/`, `tests/`, workflows), esquema JSON e plano de exemplo (dados fictícios) | [MIT](LICENSE) |
+| Textos: documento do contrato (`contrato-plano-captura.md`) e README | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.pt-br) |
+
+Copyright © 2026 Rodrigo Smarzaro e Programa Youthmappers UFV.
