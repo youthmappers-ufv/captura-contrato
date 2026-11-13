@@ -497,11 +497,12 @@ class Motor(Protocol):
 
 Qualquer outra exceção é um defeito do motor e DEVERIA virar HTTP 500 com registro em log.
 
-**`MotorDeExemplo`.** Uma implementação falsa que confere as entradas como o motor real e devolve sempre o plano de exemplo, com id e data novos; não aplica ajustes nem parâmetros de rota. Com ela, o TCC 1 pode construir a API e as telas antes de o motor real existir. Quando o motor da IC ficar pronto, troca-se uma linha:
+**`MotorDeExemplo`.** Uma implementação falsa que confere as entradas como o motor real e devolve sempre o plano de exemplo, com id e data novos; não aplica ajustes nem parâmetros de rota. Com ela, o TCC 1 pode construir a API e as telas antes de o motor real existir. Quando o motor da IC ficar pronto, troca-se o motor:
 
 ```python
 # motor = MotorDeExemplo()
-motor = MotorP13()  # implementação real da pesquisa
+from captura_motor import Planejador
+motor = Planejador()  # implementação real da pesquisa (repositório captura-motor)
 ```
 
 ---
@@ -707,3 +708,4 @@ Questões a decidir antes da 1.0.0, provavelmente com a experiência dos primeir
 | 0.1.1 | 2026-11-13 | Contrato empacotado como `captura_contrato` (pacote Python instalável, com o esquema e o exemplo como recursos do pacote e o comando `validar-plano`); separação entre versão do formato e versão do pacote. O formato não mudou: continua 0.1.0. |
 | 0.1.2 | 2026-11-13 | Pacote com anotações de tipo completas e o marcador `py.typed`, conferido pelo mypy em modo estrito; `Ajuste`, `Progresso` e `Cancelado` exportados pelo pacote. O formato não mudou: continua 0.1.0. |
 | 0.1.3 | 2026-11-13 | Licenças: código, esquema e exemplo sob MIT (`LICENSE`, `License-Expression: MIT` nos metadados do pacote); textos sob CC BY 4.0. O formato não mudou: continua 0.1.0. |
+| 0.1.3 (texto) | 2026-11-13 | Exemplo da seção 9 com o nome real da classe do motor (`Planejador`, do pacote `captura_motor`). Sem nova etiqueta: só o documento mudou. |
