@@ -17,18 +17,22 @@ from __future__ import annotations
 import json
 from importlib.metadata import PackageNotFoundError, version
 from importlib.resources import files
+from typing import Any
 
 from .motor_interface import (
     PARAMETROS_DE_COBERTURA,
     PARAMETROS_DE_ROTA,
     VERSAO_FORMATO,
+    Ajuste,
     AreaGrandeDemais,
     AreaInvalida,
+    Cancelado,
     ErroMotor,
     Motor,
     MotorDeExemplo,
     ParametrosInvalidos,
     PlanejamentoCancelado,
+    Progresso,
     ProvedorIndisponivel,
     conferir_entradas_de_planejar,
 )
@@ -40,21 +44,23 @@ except PackageNotFoundError:  # rodando direto do código-fonte, sem instalar
     __version__ = "0.0.0+fonte"
 
 
-def carregar_exemplo() -> dict:
+def carregar_exemplo() -> dict[str, Any]:
     """Devolve uma cópia nova do plano de exemplo oficial (dados fictícios)."""
     texto = (files("captura_contrato") / "exemplo-plano.geojson").read_text(encoding="utf-8")
-    return json.loads(texto)
+    exemplo: dict[str, Any] = json.loads(texto)
+    return exemplo
 
 
-def carregar_esquema() -> dict:
+def carregar_esquema() -> dict[str, Any]:
     """Devolve o esquema JSON do plano de captura."""
     texto = (files("captura_contrato") / "plano-captura.schema.json").read_text(encoding="utf-8")
-    return json.loads(texto)
+    esquema: dict[str, Any] = json.loads(texto)
+    return esquema
 
 
 __all__ = [
     "PARAMETROS_DE_COBERTURA", "PARAMETROS_DE_ROTA", "VERSAO_FORMATO", "__version__",
-    "AreaGrandeDemais", "AreaInvalida", "ErroMotor", "Motor", "MotorDeExemplo", "ParametrosInvalidos",
-    "PlanejamentoCancelado", "ProvedorIndisponivel",
+    "Ajuste", "AreaGrandeDemais", "AreaInvalida", "Cancelado", "ErroMotor", "Motor", "MotorDeExemplo", "ParametrosInvalidos",
+    "PlanejamentoCancelado", "Progresso", "ProvedorIndisponivel",
     "carregar_esquema", "carregar_exemplo", "conferir_entradas_de_planejar", "validar",
 ]

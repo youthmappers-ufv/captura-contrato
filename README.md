@@ -4,7 +4,7 @@ Contrato do **plano de captura** do projeto P13 — Planejador de captura de ima
 
 O plano de captura é o formato que o motor de planejamento (`captura-motor`, pesquisa de iniciação científica) produz e que a aplicação (`captura-app`, TCC 1 e TCC 2) exibe, exporta e leva a campo. Este repositório é o acordo entre as três partes: o que cada uma pode esperar das outras, verificado por testes.
 
-**Formato:** 0.1.0 · **Pacote:** 0.1.1 · proposta, pode mudar sem compatibilidade até a 1.0.0. A diferença entre as duas versões está na seção 3 do documento.
+**Formato:** 0.1.0 · **Pacote:** 0.1.2 · proposta, pode mudar sem compatibilidade até a 1.0.0. A diferença entre as duas versões está na seção 3 do documento.
 
 ## Arquivos
 
@@ -22,7 +22,7 @@ O plano de captura é o formato que o motor de planejamento (`captura-motor`, pe
 Requer Python 3.11 ou mais novo. Em outro repositório, sempre numa etiqueta fixa:
 
 ```bash
-pip install "captura-contrato @ git+https://github.com/youthmappers-ufv/captura-contrato@v0.1.1"
+pip install "captura-contrato @ git+https://github.com/youthmappers-ufv/captura-contrato@v0.1.2"
 ```
 
 Para trabalhar neste repositório:
@@ -30,6 +30,7 @@ Para trabalhar neste repositório:
 ```bash
 pip install -e ".[dev]"
 pytest -q
+mypy
 ```
 
 ## Uso

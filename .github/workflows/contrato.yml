@@ -15,4 +15,5 @@ jobs:
       # instala o pacote (não editável), para os testes usarem o que um consumidor recebe
       - run: pip install ".[dev]"
       - run: pytest -q
+      - run: mypy
       - run: validar-plano src/captura_contrato/exemplo-plano.geojson

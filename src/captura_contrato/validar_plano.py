@@ -24,8 +24,13 @@ from datetime import date, datetime
 from functools import lru_cache
 from importlib.resources import files
 from pathlib import Path
+from typing import Any
 
 from jsonschema import Draft202012Validator, FormatChecker
+
+Json = dict[str, Any]
+"""Objeto JSON (um plano, uma feature, um bloco de propriedades)."""
+Vertice = tuple[float, float]
 
 ESQUEMA = files("captura_contrato") / "plano-captura.schema.json"
 """O esquema vai dentro do pacote; `files()` o encontra instalado ou no código-fonte."""
@@ -64,7 +69,7 @@ def vertice(c: list[float]) -> tuple[float, float]:
     return (round(c[0], CASAS_VERTICE), round(c[1], CASAS_VERTICE))
 
 
-def exigencia_esperada(seg: dict, camera: str) -> str:
+def exigencia_esperada(seg: Json, camera: str) -> str:
     """Regra R6: a exigência decorre da área, do estado, do ajuste, da câmera e do sentido."""
     if not seg["na_area"] or seg["ajuste"] == "excluido":
         return "nenhuma"
@@ -94,7 +99,7 @@ def _validador_do_esquema() -> Draft202012Validator:
     return Draft202012Validator(esquema, format_checker=FormatChecker())
 
 
-def _data_de_referencia(meta: dict) -> date | None:
+def _data_de_referencia(meta: Json) -> date | None:
     """Data da consulta de cobertura mais recente; base para a idade das imagens."""
     try:
         return max(datetime.fromisoformat(c["consultado_em"]).date()
@@ -103,7 +108,7 @@ def _data_de_referencia(meta: dict) -> date | None:
         return None
 
 
-def _cobertura_incoerente(sp: dict, par: dict, referencia: date | None) -> list[str]:
+def _cobertura_incoerente(sp: Json, par: Json, referencia: date | None) -> list[str]:
     """R13: estado, frações e data da última imagem de um segmento contam a mesma história."""
     msgs = []
     com, atual = sp["fracao_com_imagem"], sp["fracao_atual"]
@@ -138,7 +143,7 @@ def _cobertura_incoerente(sp: dict, par: dict, referencia: date | None) -> list[
     return msgs
 
 
-def _inicios_e_fins(sessoes: list[dict], pontos: list[dict], par: dict, estado: str) -> list[str]:
+def _inicios_e_fins(sessoes: list[Json], pontos: list[Json], par: Json, estado: str) -> list[str]:
     """R14: onde cada sessão começa e termina, conforme a partida, a chegada e sessoes_partem_da_base."""
     erros = []
     do_plano = {pt["properties"]["papel"]: vertice(pt["geometry"]["coordinates"])
@@ -177,7 +182,7 @@ def _inicios_e_fins(sessoes: list[dict], pontos: list[dict], par: dict, estado: 
     return erros
 
 
-def validar(plano: dict) -> list[str]:
+def validar(plano: Json) -> list[str]:
     """Devolve a lista de erros encontrados (vazia se o plano for válido)."""
     erros = [
         f"[esquema] {'/'.join(map(str, e.absolute_path)) or '(raiz)'}: {e.message}"
@@ -188,7 +193,7 @@ def validar(plano: dict) -> list[str]:
 
     meta = plano["plano"]
     par = meta["parametros"]
-    por_tipo: dict[str, list[dict]] = {"area": [], "segmento": [], "sessao": [], "ponto": []}
+    por_tipo: dict[str, list[Json]] = {"area": [], "segmento": [], "sessao": [], "ponto": []}
     for f in plano["features"]:
         por_tipo[f["properties"]["tipo"]].append(f)
     areas, segs, sessoes, pontos = (por_tipo[k] for k in ("area", "segmento", "sessao", "ponto"))
@@ -230,16 +235,16 @@ def validar(plano: dict) -> list[str]:
 
     # Trechos orientados da rede, para conferir a contramão também fora das passagens (R5).
     # permitidos: (a, b) que se pode percorrer; contramao: (a, b) → id do segmento de mão única.
-    permitidos: set[tuple] = set()
-    contramao: dict[tuple, str] = {}
+    permitidos: set[tuple[Vertice, Vertice]] = set()
+    contramao: dict[tuple[Vertice, Vertice], str] = {}
     for s in segs:
         vs = [vertice(c) for c in s["geometry"]["coordinates"]]
-        for a, b in zip(vs, vs[1:]):
-            permitidos.add((a, b))
+        for v1, v2 in zip(vs, vs[1:]):
+            permitidos.add((v1, v2))
             if s["properties"]["mao_unica"]:
-                contramao[(b, a)] = s["properties"]["id"]
+                contramao[(v2, v1)] = s["properties"]["id"]
             else:
-                permitidos.add((b, a))
+                permitidos.add((v2, v1))
 
     # R4, R5, R7, R8, R12 — sessões e suas passagens
     cobertos: dict[str, set[str]] = {}
@@ -374,10 +379,10 @@ def validar(plano: dict) -> list[str]:
     km_alvo = sum(s["properties"]["comprimento_m"] for s in alvo) / 1000
     if not perto(r["km_alvo"], km_alvo):
         erros.append(f"[R10] resumo.km_alvo={r['km_alvo']}, soma dos segmentos-alvo={km_alvo:.3f}")
-    def exigido_km(lista) -> float:
+    def exigido_km(lista: list[Json]) -> float:
         """Captura mínima exigida: 'dois_sentidos' conta duas passadas."""
-        return sum(s["properties"]["comprimento_m"] * (2 if s["properties"]["exigencia"] == "dois_sentidos" else 1)
-                   for s in lista) / 1000
+        return float(sum(s["properties"]["comprimento_m"] * (2 if s["properties"]["exigencia"] == "dois_sentidos" else 1)
+                         for s in lista)) / 1000
     km_exigido = exigido_km(alvo)
     if not perto(r["km_exigido"], km_exigido):
         erros.append(f"[R10] resumo.km_exigido={r['km_exigido']}, captura exigida pelos segmentos-alvo={km_exigido:.3f}")
@@ -460,8 +465,8 @@ def main(caminhos: list[str]) -> int:
         if erros:
             ok = False
             print(f"{errado} {caminho}: {len(erros)} erro(s)")
-            for e in erros:
-                print(f"   {e}")
+            for linha in erros:
+                print(f"   {linha}")
         else:
             print(f"{certo} {caminho}: plano válido")
     return 0 if ok else 1

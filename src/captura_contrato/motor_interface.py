@@ -24,7 +24,7 @@ import uuid
 from datetime import datetime, timezone
 from importlib.resources import files
 from pathlib import Path
-from typing import Callable, Literal, Mapping, Optional, Protocol
+from typing import Any, Callable, Literal, Mapping, Optional, Protocol
 
 VERSAO_FORMATO = "0.1.0"
 
@@ -88,12 +88,12 @@ class Motor(Protocol):
 
     def analisar_cobertura(
         self,
-        area: Mapping,
-        parametros: Mapping,
+        area: Mapping[str, Any],
+        parametros: Mapping[str, Any],
         *,
         progresso: Optional[Progresso] = None,
         cancelado: Optional[Cancelado] = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Classifica os segmentos da área, sem gerar rotas.
 
         Devolve um plano com `estado = "cobertura"`: área + segmentos, sem
@@ -104,13 +104,13 @@ class Motor(Protocol):
 
     def planejar(
         self,
-        cobertura: Mapping,
+        cobertura: Mapping[str, Any],
         *,
         ajustes: Optional[Mapping[str, Ajuste]] = None,
-        parametros: Optional[Mapping] = None,
+        parametros: Optional[Mapping[str, Any]] = None,
         progresso: Optional[Progresso] = None,
         cancelado: Optional[Cancelado] = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Gera o plano completo (`estado = "completo"`) a partir de um plano de cobertura.
 
         `cobertura` é um plano válido com `estado = "cobertura"`, devolvido
@@ -132,8 +132,8 @@ class Motor(Protocol):
         ...
 
 
-def conferir_entradas_de_planejar(cobertura: Mapping, ajustes: Optional[Mapping] = None,
-                                  parametros: Optional[Mapping] = None) -> None:
+def conferir_entradas_de_planejar(cobertura: Mapping[str, Any], ajustes: Optional[Mapping[str, Any]] = None,
+                                  parametros: Optional[Mapping[str, Any]] = None) -> None:
     """Conferências que todo motor faz em `planejar()`; reutilizável pelo motor real."""
     if cobertura.get("plano", {}).get("estado") != "cobertura":
         raise ParametrosInvalidos("planejar() recebe um plano em estado 'cobertura'")
@@ -162,17 +162,19 @@ class MotorDeExemplo:
 
     def __init__(self, caminho: Path | None = None):
         recurso = caminho or files("captura_contrato") / "exemplo-plano.geojson"
-        self._exemplo = json.loads(recurso.read_text(encoding="utf-8"))
+        self._exemplo: dict[str, Any] = json.loads(recurso.read_text(encoding="utf-8"))
 
-    def _novo(self) -> dict:
-        plano = copy.deepcopy(self._exemplo)
+    def _novo(self) -> dict[str, Any]:
+        plano: dict[str, Any] = copy.deepcopy(self._exemplo)
         plano["plano"]["id"] = str(uuid.uuid4())
         plano["plano"]["criado_em"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
         plano["plano"]["gerado_por"] = {"software": self.nome, "versao": self.versao,
                                         "algoritmo": "exemplo", "semente": None}
         return plano
 
-    def analisar_cobertura(self, area, parametros, *, progresso=None, cancelado=None) -> dict:
+    def analisar_cobertura(self, area: Mapping[str, Any], parametros: Mapping[str, Any], *,
+                           progresso: Optional[Progresso] = None,
+                           cancelado: Optional[Cancelado] = None) -> dict[str, Any]:
         plano = self._novo()
         plano["plano"]["estado"] = "cobertura"
         plano["features"] = [f for f in plano["features"]
@@ -184,7 +186,9 @@ class MotorDeExemplo:
             progresso(1.0, "Cobertura analisada")
         return plano
 
-    def planejar(self, cobertura, *, ajustes=None, parametros=None, progresso=None, cancelado=None) -> dict:
+    def planejar(self, cobertura: Mapping[str, Any], *, ajustes: Optional[Mapping[str, Ajuste]] = None,
+                 parametros: Optional[Mapping[str, Any]] = None, progresso: Optional[Progresso] = None,
+                 cancelado: Optional[Cancelado] = None) -> dict[str, Any]:
         """Confere as entradas como o motor real faria, mas devolve sempre o plano de exemplo.
 
         Não aplica ajustes nem parâmetros de rota: serve para construir a API e
