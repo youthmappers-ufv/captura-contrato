@@ -25,7 +25,17 @@ Requer Python 3.11 ou mais novo. Em outro repositório, sempre numa etiqueta fix
 pip install "captura-contrato @ git+https://github.com/youthmappers-ufv/captura-contrato@v0.1.2"
 ```
 
-Para trabalhar neste repositório:
+Para trabalhar neste repositório, com o [uv](https://docs.astral.sh/uv/) (recomendado):
+
+```bash
+uv sync --extra dev
+uv run pytest -q
+uv run mypy
+```
+
+O `uv sync` cria o ambiente em `.venv` com as versões travadas no `uv.lock`, que é versionado. Ao mudar dependências no `pyproject.toml`, rode `uv lock` e versione o `uv.lock` junto.
+
+Sem o uv, com o pip:
 
 ```bash
 pip install -e ".[dev]"
