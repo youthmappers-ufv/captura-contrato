@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "captura-contrato"
 # Versão do PACOTE. A versão do FORMATO do plano é VERSAO_FORMATO (motor_interface.py).
-version = "0.1.2"
+version = "0.1.3"
 description = "Contrato do plano de captura de imagens de rua (P13, Programa Youthmappers UFV): esquema, validador, exemplo e interface do motor."
 readme = "README.md"
 requires-python = ">=3.11"
