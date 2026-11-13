@@ -1,0 +1,485 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://youthmappers-ufv.github.io/esquemas/plano-captura/0.1.0/plano-captura.schema.json",
+  "title": "Plano de captura de imagens de rua",
+  "description": "Formato de troca entre o motor de planejamento (pesquisa P13), a aplicação de planejamento (TCC 1) e o modo campo (TCC 2). O plano é um GeoJSON FeatureCollection (RFC 7946) com membros adicionais. Documentação completa: contrato-plano-captura.md.",
+  "type": "object",
+  "required": ["type", "formato", "versao_formato", "plano", "features"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "FeatureCollection" },
+    "formato": {
+      "const": "plano-captura",
+      "description": "Identifica o arquivo como plano de captura. Consumidores usam este campo para reconhecer o tipo do arquivo."
+    },
+    "versao_formato": {
+      "type": "string",
+      "pattern": "^0\\.1\\.[0-9]+$",
+      "description": "Versão do formato (SemVer). Este esquema aceita 0.1.x."
+    },
+    "plano": { "$ref": "#/$defs/Plano" },
+    "features": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/FeatureArea" },
+          { "$ref": "#/$defs/FeatureSegmento" },
+          { "$ref": "#/$defs/FeatureSessao" },
+          { "$ref": "#/$defs/FeaturePonto" }
+        ]
+      }
+    }
+  },
+
+  "$defs": {
+
+    "Posicao": {
+      "description": "Coordenada [longitude, latitude] em WGS 84 (EPSG:4326), nesta ordem, conforme a RFC 7946.",
+      "type": "array",
+      "prefixItems": [
+        { "type": "number", "minimum": -180, "maximum": 180 },
+        { "type": "number", "minimum": -90, "maximum": 90 }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+
+    "DataHora": {
+      "description": "Data e hora ISO 8601 com fuso, por exemplo 2026-10-14T13:05:00Z.",
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "Identificador": {
+      "description": "Identificador local, único dentro do plano.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+
+    "Provedor": {
+      "type": "string",
+      "enum": ["mapillary", "panoramax"]
+    },
+
+    "GeometriaLinha": {
+      "type": "object",
+      "required": ["type", "coordinates"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "LineString" },
+        "coordinates": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/Posicao" }
+        }
+      }
+    },
+
+    "GeometriaPonto": {
+      "type": "object",
+      "required": ["type", "coordinates"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Point" },
+        "coordinates": { "$ref": "#/$defs/Posicao" }
+      }
+    },
+
+    "Anel": {
+      "description": "Anel linear fechado: o primeiro e o último ponto são iguais (verificado pelo validador).",
+      "type": "array",
+      "minItems": 4,
+      "items": { "$ref": "#/$defs/Posicao" }
+    },
+
+    "GeometriaArea": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "Polygon" },
+            "coordinates": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Anel" } }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "MultiPolygon" },
+            "coordinates": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Anel" } }
+            }
+          }
+        }
+      ]
+    },
+
+    "Plano": {
+      "description": "Metadados do plano: identificação, origem, parâmetros e resumo.",
+      "type": "object",
+      "required": ["id", "estado", "criado_em", "idioma", "gerado_por", "fontes", "parametros", "resumo", "segmentos_nao_atendidos"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Identificador global do plano (UUID). É o que aparece no link compartilhável."
+        },
+        "nome": { "type": ["string", "null"], "maxLength": 200 },
+        "estado": {
+          "type": "string",
+          "enum": ["cobertura", "completo"],
+          "description": "'cobertura': só a análise de cobertura (sem sessões). 'completo': plano com sessões."
+        },
+        "criado_em": { "$ref": "#/$defs/DataHora" },
+        "expira_em": {
+          "description": "Quando o plano deixa de estar disponível no servidor; null = não expira.",
+          "oneOf": [{ "$ref": "#/$defs/DataHora" }, { "type": "null" }]
+        },
+        "idioma": {
+          "type": "string",
+          "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+          "description": "Idioma dos textos do plano (nomes, instruções), em BCP 47 simplificado. Ex.: pt-BR."
+        },
+        "gerado_por": {
+          "type": "object",
+          "required": ["software", "versao", "algoritmo"],
+          "additionalProperties": false,
+          "properties": {
+            "software": { "type": "string", "description": "Nome do motor que gerou o plano." },
+            "versao": { "type": "string", "description": "Versão do motor." },
+            "algoritmo": { "type": "string", "description": "Algoritmo usado, por exemplo B1, H1, H2." },
+            "semente": {
+              "type": ["integer", "null"],
+              "description": "Semente aleatória, para reprodutibilidade; null se o algoritmo for determinístico."
+            }
+          }
+        },
+        "fontes": {
+          "type": "object",
+          "required": ["osm", "cobertura"],
+          "additionalProperties": false,
+          "properties": {
+            "osm": {
+              "type": "object",
+              "required": ["data_retrato", "origem"],
+              "additionalProperties": false,
+              "properties": {
+                "data_retrato": { "$ref": "#/$defs/DataHora" },
+                "origem": { "type": "string", "description": "De onde veio a rede viária (extrato, servidor)." }
+              }
+            },
+            "cobertura": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["provedor", "consultado_em"],
+                "additionalProperties": false,
+                "properties": {
+                  "provedor": { "$ref": "#/$defs/Provedor" },
+                  "consultado_em": { "$ref": "#/$defs/DataHora" },
+                  "instancia": {
+                    "type": ["string", "null"],
+                    "format": "uri",
+                    "description": "Endereço da instância consultada (útil para o Panoramax, que é federado)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parametros": { "$ref": "#/$defs/Parametros" },
+        "resumo": { "$ref": "#/$defs/Resumo" },
+        "segmentos_nao_atendidos": {
+          "description": "Segmentos obrigatórios que o motor não conseguiu incluir nas sessões, com o motivo.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["segmento", "motivo"],
+            "additionalProperties": false,
+            "properties": {
+              "segmento": { "$ref": "#/$defs/Identificador" },
+              "motivo": { "type": "string", "enum": ["inalcancavel", "limite_de_sessao", "outro"] },
+              "detalhe": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "extensoes": {
+          "type": "object",
+          "description": "Espaço livre para campos experimentais, prefixados pelo nome do projeto (ex.: 'p13_tempo_ms'). Nada aqui é garantido entre versões."
+        }
+      }
+    },
+
+    "Parametros": {
+      "description": "Parâmetros usados para gerar o plano. Guardá-los permite refazer o plano e explicar o resultado.",
+      "type": "object",
+      "required": ["modo", "camera", "idade_maxima_dias", "provedores", "segmento_max_m", "cobertura", "velocidade_captura_kmh", "velocidade_deslocamento_kmh", "limite_sessao", "partida", "chegada", "sessoes_partem_da_base", "preferencias"],
+      "additionalProperties": false,
+      "properties": {
+        "modo": { "type": "string", "enum": ["carro", "moto", "bicicleta", "a_pe"] },
+        "camera": { "type": "string", "enum": ["panoramica_360", "frontal"] },
+        "idade_maxima_dias": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Imagens mais antigas que isto contam como desatualizadas."
+        },
+        "provedores": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/Provedor" }
+        },
+        "segmento_max_m": { "type": "number", "exclusiveMinimum": 0 },
+        "cobertura": {
+          "type": "object",
+          "required": ["distancia_max_m", "fracao_min"],
+          "additionalProperties": false,
+          "properties": {
+            "distancia_max_m": { "type": "number", "exclusiveMinimum": 0 },
+            "fracao_min": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+          }
+        },
+        "velocidade_captura_kmh": {
+          "type": "number", "exclusiveMinimum": 0,
+          "description": "Velocidade nos trechos com captura, usada para estimar tempos."
+        },
+        "velocidade_deslocamento_kmh": {
+          "type": "number", "exclusiveMinimum": 0,
+          "description": "Velocidade nos trechos sem captura (deslocamento em vazio), em geral maior que a de captura."
+        },
+        "limite_sessao": {
+          "type": "object",
+          "required": ["duracao_max_min", "distancia_max_km"],
+          "additionalProperties": false,
+          "properties": {
+            "duracao_max_min": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+            "distancia_max_km": { "type": ["number", "null"], "exclusiveMinimum": 0 }
+          }
+        },
+        "partida": {
+          "description": "Ponto escolhido pelo usuário; o motor o ajusta à rede e registra o ponto ajustado como feature 'ponto'.",
+          "oneOf": [{ "$ref": "#/$defs/Posicao" }, { "type": "null" }]
+        },
+        "chegada": {
+          "description": "Ponto final escolhido pelo usuário; null = a última sessão (ou cada sessão, com sessoes_partem_da_base) termina onde for melhor, ou na partida se sessoes_partem_da_base.",
+          "oneOf": [{ "$ref": "#/$defs/Posicao" }, { "type": "null" }]
+        },
+        "sessoes_partem_da_base": {
+          "type": "boolean",
+          "description": "true: toda sessão começa na partida e termina na chegada (ou na partida, se não houver chegada); exige partida. false: as sessões se encadeiam, cada uma começando onde a anterior terminou."
+        },
+        "preferencias": {
+          "type": "object",
+          "required": ["evitar_retornos", "evitar_vias_rapidas", "evitar_sem_pavimento"],
+          "additionalProperties": false,
+          "properties": {
+            "evitar_retornos": { "type": "boolean" },
+            "evitar_vias_rapidas": { "type": "boolean" },
+            "evitar_sem_pavimento": { "type": "boolean" }
+          }
+        }
+      }
+    },
+
+    "Resumo": {
+      "description": "Números do plano. Distâncias em km, tempos em minutos. Campos de sessão são null quando estado = 'cobertura'.",
+      "type": "object",
+      "required": ["n_segmentos", "n_segmentos_alvo", "km_rede_modo", "km_alvo", "km_exigido", "n_sessoes", "km_total", "km_sem_captura", "km_exigido_atendido", "razao_deslocamento", "duracao_estimada_min"],
+      "additionalProperties": false,
+      "properties": {
+        "n_segmentos": { "type": "integer", "minimum": 0 },
+        "n_segmentos_alvo": { "type": "integer", "minimum": 0 },
+        "km_rede_modo": { "type": "number", "minimum": 0 },
+        "km_alvo": { "type": "number", "minimum": 0, "description": "Soma dos comprimentos dos segmentos-alvo, cada um contado uma vez." },
+        "km_exigido": {
+          "type": "number", "minimum": 0,
+          "description": "Captura mínima exigida: soma dos comprimentos dos segmentos-alvo, contando duas vezes os de exigência 'dois_sentidos'."
+        },
+        "n_sessoes": { "type": "integer", "minimum": 0 },
+        "km_total": { "type": ["number", "null"], "minimum": 0 },
+        "km_sem_captura": { "type": ["number", "null"], "minimum": 0 },
+        "km_exigido_atendido": {
+          "type": ["number", "null"], "minimum": 0,
+          "description": "Parte de km_exigido cujos segmentos foram atendidos pelas passagens. A fração atendida é km_exigido_atendido ÷ km_exigido."
+        },
+        "razao_deslocamento": {
+          "type": ["number", "null"], "minimum": 1,
+          "description": "km_total ÷ km_exigido_atendido; null em plano de cobertura ou quando nada foi atendido."
+        },
+        "duracao_estimada_min": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+
+    "FeatureArea": {
+      "description": "A área de interesse. Exatamente uma por plano.",
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Feature" },
+        "geometry": { "$ref": "#/$defs/GeometriaArea" },
+        "properties": {
+          "type": "object",
+          "required": ["tipo", "origem"],
+          "additionalProperties": false,
+          "properties": {
+            "tipo": { "const": "area" },
+            "origem": { "type": "string", "enum": ["desenho", "arquivo", "nominatim", "relacao_osm"] },
+            "referencia": {
+              "type": ["string", "null"],
+              "description": "Para 'relacao_osm', o identificador (ex.: r1234567); para 'nominatim', o termo buscado; para 'arquivo', o nome do arquivo."
+            },
+            "nome": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+
+    "FeatureSegmento": {
+      "description": "Trecho de via, unidade de cobertura. A ordem dos vértices define o 'sentido da geometria'; em via de mão única, ela coincide com o sentido permitido.",
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Feature" },
+        "geometry": { "$ref": "#/$defs/GeometriaLinha" },
+        "properties": {
+          "type": "object",
+          "required": ["tipo", "id", "osm_way_id", "classe_via", "comprimento_m", "mao_unica", "na_area", "estado", "fracao_com_imagem", "fracao_atual", "ultima_imagem", "exigencia", "ajuste"],
+          "additionalProperties": false,
+          "properties": {
+            "tipo": { "const": "segmento" },
+            "id": { "$ref": "#/$defs/Identificador" },
+            "osm_way_id": { "type": "integer", "minimum": 1 },
+            "nome": { "type": ["string", "null"] },
+            "classe_via": { "type": "string", "description": "Valor da etiqueta highway do OSM (ex.: residential)." },
+            "comprimento_m": { "type": "number", "exclusiveMinimum": 0 },
+            "mao_unica": { "type": "boolean", "description": "Se o trecho é de mão única para o modo do plano." },
+            "na_area": {
+              "type": "boolean",
+              "description": "true: o segmento fica na área e pode ser alvo. false: segmento fora da área, presente só para deslocamento; nunca é alvo."
+            },
+            "estado": {
+              "oneOf": [{ "type": "string", "enum": ["sem_imagem", "desatualizado", "atual"] }, { "type": "null" }],
+              "description": "Classificação da cobertura, derivada das frações (regra provisória da seção 6.8); null só em segmento fora da área não classificado."
+            },
+            "fracao_com_imagem": {
+              "type": ["number", "null"], "minimum": 0, "maximum": 1,
+              "description": "Fração do comprimento com alguma imagem associada, de qualquer idade."
+            },
+            "fracao_atual": {
+              "type": ["number", "null"], "minimum": 0, "maximum": 1,
+              "description": "Fração do comprimento com imagem dentro de idade_maxima_dias."
+            },
+            "ultima_imagem": {
+              "description": "Data da imagem mais recente associada ao segmento; null se não houver.",
+              "oneOf": [{ "type": "string", "format": "date" }, { "type": "null" }]
+            },
+            "provedor_ultima_imagem": {
+              "oneOf": [{ "$ref": "#/$defs/Provedor" }, { "type": "null" }]
+            },
+            "exigencia": {
+              "type": "string",
+              "enum": ["nenhuma", "qualquer_sentido", "sentido_da_geometria", "dois_sentidos"],
+              "description": "O que o plano precisa fazer com o segmento. 'nenhuma' = não é alvo."
+            },
+            "ajuste": {
+              "oneOf": [{ "type": "string", "enum": ["incluido", "excluido"] }, { "type": "null" }],
+              "description": "Decisão manual do usuário, que prevalece sobre o estado."
+            }
+          }
+        }
+      }
+    },
+
+    "Passagem": {
+      "description": "Um trecho de captura dentro da sessão, localizado por referência linear (metros desde o início da linha da sessão).",
+      "type": "object",
+      "required": ["segmento", "sentido", "inicio_m", "fim_m"],
+      "additionalProperties": false,
+      "properties": {
+        "segmento": { "$ref": "#/$defs/Identificador" },
+        "sentido": { "type": "string", "enum": ["direto", "inverso"] },
+        "inicio_m": { "type": "number", "minimum": 0 },
+        "fim_m": { "type": "number", "minimum": 0 }
+      }
+    },
+
+    "Instrucao": {
+      "type": "object",
+      "required": ["posicao_m", "manobra"],
+      "additionalProperties": false,
+      "properties": {
+        "posicao_m": { "type": "number", "minimum": 0 },
+        "manobra": {
+          "type": "string",
+          "enum": ["iniciar", "seguir", "virar_esquerda", "virar_direita", "manter_esquerda", "manter_direita", "retorno", "rotatoria", "chegar"]
+        },
+        "texto": { "type": ["string", "null"] }
+      }
+    },
+
+    "FeatureSessao": {
+      "description": "Uma sessão de coleta: a linha a ser percorrida, em ordem, do início ao fim.",
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Feature" },
+        "geometry": { "$ref": "#/$defs/GeometriaLinha" },
+        "properties": {
+          "type": "object",
+          "required": ["tipo", "id", "ordem", "distancia_km", "km_captura", "km_sem_captura", "duracao_estimada_min", "passagens"],
+          "additionalProperties": false,
+          "properties": {
+            "tipo": { "const": "sessao" },
+            "id": { "$ref": "#/$defs/Identificador" },
+            "ordem": { "type": "integer", "minimum": 1 },
+            "distancia_km": { "type": "number", "minimum": 0 },
+            "km_captura": { "type": "number", "minimum": 0 },
+            "km_sem_captura": { "type": "number", "minimum": 0 },
+            "duracao_estimada_min": { "type": "number", "minimum": 0 },
+            "passagens": { "type": "array", "items": { "$ref": "#/$defs/Passagem" } },
+            "instrucoes": {
+              "description": "Opcional na versão 0.1: instruções de manobra.",
+              "type": "array",
+              "items": { "$ref": "#/$defs/Instrucao" }
+            }
+          }
+        }
+      }
+    },
+
+    "FeaturePonto": {
+      "description": "Ponto de referência: partida ou chegada (de todo o plano ou de uma sessão).",
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Feature" },
+        "geometry": { "$ref": "#/$defs/GeometriaPonto" },
+        "properties": {
+          "type": "object",
+          "required": ["tipo", "papel", "sessao"],
+          "additionalProperties": false,
+          "properties": {
+            "tipo": { "const": "ponto" },
+            "papel": { "type": "string", "enum": ["partida", "chegada"] },
+            "sessao": {
+              "oneOf": [{ "$ref": "#/$defs/Identificador" }, { "type": "null" }],
+              "description": "Sessão a que o ponto pertence; null = ponto do plano inteiro."
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,506 @@
+{
+  "type": "FeatureCollection",
+  "formato": "plano-captura",
+  "versao_formato": "0.1.0",
+  "plano": {
+    "id": "7f3c2a9e-5b1d-4c8e-9f60-2d4b8a1e6c35",
+    "nome": "Exemplo didático — dados fictícios",
+    "estado": "completo",
+    "criado_em": "2026-10-14T13:00:00Z",
+    "expira_em": null,
+    "idioma": "pt-BR",
+    "gerado_por": {
+      "software": "exemplo-manual",
+      "versao": "0.1.0",
+      "algoritmo": "manual",
+      "semente": null
+    },
+    "fontes": {
+      "osm": {
+        "data_retrato": "2026-10-13T00:00:00Z",
+        "origem": "dados fictícios para documentação"
+      },
+      "cobertura": [
+        {
+          "provedor": "mapillary",
+          "consultado_em": "2026-10-14T12:50:00Z",
+          "instancia": null
+        },
+        {
+          "provedor": "panoramax",
+          "consultado_em": "2026-10-14T12:50:00Z",
+          "instancia": "https://api.panoramax.xyz"
+        }
+      ]
+    },
+    "parametros": {
+      "modo": "carro",
+      "camera": "panoramica_360",
+      "idade_maxima_dias": 730,
+      "provedores": [
+        "mapillary",
+        "panoramax"
+      ],
+      "segmento_max_m": 120,
+      "cobertura": {
+        "distancia_max_m": 10,
+        "fracao_min": 0.8
+      },
+      "velocidade_captura_kmh": 15.0,
+      "velocidade_deslocamento_kmh": 20.0,
+      "limite_sessao": {
+        "duracao_max_min": 60,
+        "distancia_max_km": null
+      },
+      "partida": [
+        -46.248,
+        -19.185
+      ],
+      "chegada": [
+        -46.248,
+        -19.186
+      ],
+      "sessoes_partem_da_base": false,
+      "preferencias": {
+        "evitar_retornos": true,
+        "evitar_vias_rapidas": false,
+        "evitar_sem_pavimento": false
+      }
+    },
+    "resumo": {
+      "n_segmentos": 7,
+      "n_segmentos_alvo": 5,
+      "km_rede_modo": 0.754,
+      "km_alvo": 0.544,
+      "km_exigido": 0.544,
+      "n_sessoes": 2,
+      "km_total": 0.754,
+      "km_sem_captura": 0.21,
+      "km_exigido_atendido": 0.544,
+      "razao_deslocamento": 1.39,
+      "duracao_estimada_min": 3.0
+    },
+    "segmentos_nao_atendidos": [],
+    "extensoes": {}
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -46.2485,
+              -19.1845
+            ],
+            [
+              -46.2455,
+              -19.1845
+            ],
+            [
+              -46.2455,
+              -19.1865
+            ],
+            [
+              -46.2485,
+              -19.1865
+            ],
+            [
+              -46.2485,
+              -19.1845
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "area",
+        "origem": "desenho",
+        "referencia": null,
+        "nome": "Quarteirões de exemplo"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.248,
+            -19.185
+          ],
+          [
+            -46.247,
+            -19.185
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "segmento",
+        "id": "s1",
+        "osm_way_id": 1000001,
+        "nome": "Rua Exemplo Um",
+        "classe_via": "residential",
+        "comprimento_m": 105.0,
+        "mao_unica": false,
+        "na_area": true,
+        "estado": "sem_imagem",
+        "fracao_com_imagem": 0.0,
+        "fracao_atual": 0.0,
+        "ultima_imagem": null,
+        "provedor_ultima_imagem": null,
+        "exigencia": "qualquer_sentido",
+        "ajuste": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.247,
+            -19.185
+          ],
+          [
+            -46.246,
+            -19.185
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "segmento",
+        "id": "s2",
+        "osm_way_id": 1000001,
+        "nome": "Rua Exemplo Um",
+        "classe_via": "residential",
+        "comprimento_m": 105.0,
+        "mao_unica": false,
+        "na_area": true,
+        "estado": "desatualizado",
+        "fracao_com_imagem": 0.9,
+        "fracao_atual": 0.0,
+        "ultima_imagem": "2019-05-20",
+        "provedor_ultima_imagem": "mapillary",
+        "exigencia": "qualquer_sentido",
+        "ajuste": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.246,
+            -19.185
+          ],
+          [
+            -46.246,
+            -19.186
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "segmento",
+        "id": "s3",
+        "osm_way_id": 1000003,
+        "nome": "Rua Exemplo Três",
+        "classe_via": "residential",
+        "comprimento_m": 111.2,
+        "mao_unica": true,
+        "na_area": true,
+        "estado": "sem_imagem",
+        "fracao_com_imagem": 0.0,
+        "fracao_atual": 0.0,
+        "ultima_imagem": null,
+        "provedor_ultima_imagem": null,
+        "exigencia": "sentido_da_geometria",
+        "ajuste": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.246,
+            -19.186
+          ],
+          [
+            -46.247,
+            -19.186
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "segmento",
+        "id": "s4",
+        "osm_way_id": 1000002,
+        "nome": "Rua Exemplo Dois",
+        "classe_via": "residential",
+        "comprimento_m": 105.0,
+        "mao_unica": false,
+        "na_area": true,
+        "estado": "atual",
+        "fracao_com_imagem": 1.0,
+        "fracao_atual": 1.0,
+        "ultima_imagem": "2026-03-02",
+        "provedor_ultima_imagem": "panoramax",
+        "exigencia": "nenhuma",
+        "ajuste": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.247,
+            -19.186
+          ],
+          [
+            -46.248,
+            -19.186
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "segmento",
+        "id": "s5",
+        "osm_way_id": 1000002,
+        "nome": "Rua Exemplo Dois",
+        "classe_via": "residential",
+        "comprimento_m": 105.0,
+        "mao_unica": false,
+        "na_area": true,
+        "estado": "sem_imagem",
+        "fracao_com_imagem": 0.0,
+        "fracao_atual": 0.0,
+        "ultima_imagem": null,
+        "provedor_ultima_imagem": null,
+        "exigencia": "nenhuma",
+        "ajuste": "excluido"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.248,
+            -19.186
+          ],
+          [
+            -46.248,
+            -19.185
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "segmento",
+        "id": "s6",
+        "osm_way_id": 1000004,
+        "nome": "Rua Exemplo Quatro",
+        "classe_via": "residential",
+        "comprimento_m": 111.2,
+        "mao_unica": false,
+        "na_area": true,
+        "estado": "atual",
+        "fracao_com_imagem": 1.0,
+        "fracao_atual": 0.95,
+        "ultima_imagem": "2025-11-18",
+        "provedor_ultima_imagem": "mapillary",
+        "exigencia": "qualquer_sentido",
+        "ajuste": "incluido"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.247,
+            -19.186
+          ],
+          [
+            -46.247,
+            -19.185
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "segmento",
+        "id": "s7",
+        "osm_way_id": 1000005,
+        "nome": "Rua Exemplo Cinco",
+        "classe_via": "residential",
+        "comprimento_m": 111.2,
+        "mao_unica": true,
+        "na_area": true,
+        "estado": "sem_imagem",
+        "fracao_com_imagem": 0.0,
+        "fracao_atual": 0.0,
+        "ultima_imagem": null,
+        "provedor_ultima_imagem": null,
+        "exigencia": "sentido_da_geometria",
+        "ajuste": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.248,
+            -19.185
+          ],
+          [
+            -46.247,
+            -19.185
+          ],
+          [
+            -46.246,
+            -19.185
+          ],
+          [
+            -46.246,
+            -19.186
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "sessao",
+        "id": "ses1",
+        "ordem": 1,
+        "distancia_km": 0.321,
+        "km_captura": 0.321,
+        "km_sem_captura": 0.0,
+        "duracao_estimada_min": 1.3,
+        "passagens": [
+          {
+            "segmento": "s1",
+            "sentido": "direto",
+            "inicio_m": 0.0,
+            "fim_m": 105.0
+          },
+          {
+            "segmento": "s2",
+            "sentido": "direto",
+            "inicio_m": 105.0,
+            "fim_m": 210.0
+          },
+          {
+            "segmento": "s3",
+            "sentido": "direto",
+            "inicio_m": 210.0,
+            "fim_m": 321.2
+          }
+        ],
+        "instrucoes": [
+          {
+            "posicao_m": 0,
+            "manobra": "iniciar",
+            "texto": "Siga para leste pela Rua Exemplo Um"
+          },
+          {
+            "posicao_m": 210.0,
+            "manobra": "virar_direita",
+            "texto": "Vire à direita na Rua Exemplo Três"
+          },
+          {
+            "posicao_m": 321.2,
+            "manobra": "chegar",
+            "texto": "Fim da sessão 1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -46.246,
+            -19.186
+          ],
+          [
+            -46.247,
+            -19.186
+          ],
+          [
+            -46.247,
+            -19.185
+          ],
+          [
+            -46.248,
+            -19.185
+          ],
+          [
+            -46.248,
+            -19.186
+          ]
+        ]
+      },
+      "properties": {
+        "tipo": "sessao",
+        "id": "ses2",
+        "ordem": 2,
+        "distancia_km": 0.432,
+        "km_captura": 0.222,
+        "km_sem_captura": 0.21,
+        "duracao_estimada_min": 1.7,
+        "passagens": [
+          {
+            "segmento": "s7",
+            "sentido": "direto",
+            "inicio_m": 105.0,
+            "fim_m": 216.2
+          },
+          {
+            "segmento": "s6",
+            "sentido": "inverso",
+            "inicio_m": 321.2,
+            "fim_m": 432.4
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -46.248,
+          -19.185
+        ]
+      },
+      "properties": {
+        "tipo": "ponto",
+        "papel": "partida",
+        "sessao": null
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -46.248,
+          -19.186
+        ]
+      },
+      "properties": {
+        "tipo": "ponto",
+        "papel": "chegada",
+        "sessao": null
+      }
+    }
+  ]
+}
