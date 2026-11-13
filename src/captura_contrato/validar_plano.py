@@ -8,8 +8,9 @@
    aponta para um segmento existente".
 
 Uso:
-    pip install "jsonschema[format]"
-    python validar_plano.py plano.geojson [outro.geojson ...]
+    pip install captura-contrato        (ou: pip install -e . neste repositório)
+    validar-plano plano.geojson [outro.geojson ...]
+    python -m captura_contrato.validar_plano plano.geojson
 
 Saída: 0 se todos os planos forem válidos; 1 caso contrário.
 Também pode ser importado nos testes: `erros = validar(plano)`.
@@ -21,11 +22,13 @@ import math
 import sys
 from datetime import date, datetime
 from functools import lru_cache
+from importlib.resources import files
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-ESQUEMA = Path(__file__).with_name("plano-captura.schema.json")
+ESQUEMA = files("captura_contrato") / "plano-captura.schema.json"
+"""O esquema vai dentro do pacote; `files()` o encontra instalado ou no código-fonte."""
 TOLERANCIA_M = 1.0      # folga para comparar posições ao longo da linha
 TOLERANCIA_REL = 0.01   # 1% de folga para somas de distâncias
 TOLERANCIA_PASSAGEM = 0.05  # 5% do comprimento do segmento, para extensão e posição da passagem
@@ -464,5 +467,10 @@ def main(caminhos: list[str]) -> int:
     return 0 if ok else 1
 
 
+def principal() -> int:
+    """Ponto de entrada do comando `validar-plano`."""
+    return main(sys.argv[1:])
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(principal())

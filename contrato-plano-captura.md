@@ -1,4 +1,4 @@
-# Contrato do plano de captura — versão 0.1.0
+# Contrato do plano de captura — formato 0.1.0 (pacote 0.1.1)
 
 Projeto P13 — Planejador de captura de imagens de rua · Programa Youthmappers UFV
 Estado: **proposta** (versão 0.x, sujeita a mudanças sem compatibilidade até a 1.0.0) · Outubro de 2026
@@ -88,13 +88,19 @@ Seguindo a convenção das especificações técnicas (RFC 2119), algumas palavr
 | Arquivo | Para que serve |
 |---|---|
 | `contrato-plano-captura.md` | Este documento: significado, regras e decisões. |
-| `plano-captura.schema.json` | Esquema JSON (padrão *Draft 2020-12*): estrutura, tipos e valores permitidos. |
-| `validar_plano.py` | Validador: confere o esquema e as regras R1 a R15. Usável na linha de comando e nos testes. |
-| `exemplo-plano.geojson` | Plano de exemplo, **com dados fictícios**, válido. É a referência comum dos testes. |
-| `motor_interface.py` | Interface Python do motor, erros previstos e um motor falso (`MotorDeExemplo`). |
-| `test_contrato.py` | Testes automáticos: o exemplo é válido, e cada regra recusa um plano com defeito. |
+| `src/captura_contrato/plano-captura.schema.json` | Esquema JSON (padrão *Draft 2020-12*): estrutura, tipos e valores permitidos. |
+| `src/captura_contrato/validar_plano.py` | Validador: confere o esquema e as regras R1 a R15. Usável na linha de comando (`validar-plano`) e nos testes. |
+| `src/captura_contrato/exemplo-plano.geojson` | Plano de exemplo, **com dados fictícios**, válido. É a referência comum dos testes. |
+| `src/captura_contrato/motor_interface.py` | Interface Python do motor, erros previstos e um motor falso (`MotorDeExemplo`). |
+| `tests/test_contrato.py` | Testes automáticos: o exemplo é válido, e cada regra recusa um plano com defeito. |
 
-Os seis arquivos ficam juntos no repositório próprio `captura-contrato`, separado do motor (`captura-motor`) e da aplicação (`captura-app`): a aplicação depende do contrato, mas não do motor, e cada versão do contrato ganha sua etiqueta Git (`v0.1.0`). Os outros repositórios usam o contrato sempre numa versão fixa.
+Os arquivos ficam no repositório próprio `captura-contrato`, separado do motor (`captura-motor`) e da aplicação (`captura-app`): a aplicação depende do contrato, mas não do motor. O repositório é um pacote Python instalável (`captura_contrato`), com o esquema e o exemplo dentro do pacote; os outros repositórios o instalam sempre numa etiqueta Git fixa, por exemplo:
+
+```toml
+dependencies = ["captura-contrato @ git+https://github.com/youthmappers-ufv/captura-contrato@v0.1.1"]
+```
+
+**Duas versões.** A versão do **formato** (`versao_formato` nos arquivos e `VERSAO_FORMATO` no pacote) muda só quando o formato muda. A versão do **pacote** (`captura_contrato.__version__` e a etiqueta Git) muda também com correções de documentação, validador ou empacotamento. Assim, o pacote 0.1.1 ainda descreve o formato 0.1.0.
 
 ---
 
@@ -540,10 +546,12 @@ Apps de navegação tratam GPX de formas diferentes: alguns seguem a trilha (`tr
 **Linha de comando (Python):**
 
 ```bash
-pip install "jsonschema[format]"
-python validar_plano.py meu-plano.geojson
+pip install "captura-contrato @ git+https://github.com/youthmappers-ufv/captura-contrato@v0.1.1"
+validar-plano meu-plano.geojson
 # ✓ meu-plano.geojson: plano válido
 ```
+
+O mesmo validador roda com `python -m captura_contrato.validar_plano meu-plano.geojson`.
 
 Quando há erro, cada linha indica a regra:
 
@@ -556,8 +564,9 @@ Quando há erro, cada linha indica a regra:
 **Dentro de testes (Python):**
 
 ```python
-from validar_plano import validar
+from captura_contrato import validar, carregar_exemplo
 assert validar(plano) == []
+assert validar(carregar_exemplo()) == []
 ```
 
 **No navegador ou em Node.js (TCC 1 e TCC 2):** o esquema pode ser usado com a biblioteca Ajv (com o pacote de formatos). Isso confere só a estrutura; as regras R1 a R15 ficam no validador Python, que roda na integração contínua.
@@ -575,7 +584,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install pytest "jsonschema[format]"
+      - run: pip install pytest "captura-contrato @ git+https://github.com/youthmappers-ufv/captura-contrato@v0.1.1"
       - run: pytest -q
 ```
 
@@ -694,3 +703,4 @@ Questões a decidir antes da 1.0.0, provavelmente com a experiência dos primeir
 | 0.1.0 (validador) | 2026-11-12 | Validador mais rigoroso, sem mudança no esquema: R1, R2, R5, R7, R8, R9 e R10 ampliadas; R12 e R13 novas; `segmento_max_m` do exemplo corrigido para 120; linha de comando com mensagem para arquivo ausente ou malformado e saída sem símbolos quando o terminal não os aceita. |
 | 0.1.0 (resumo) | 2026-11-13 | Razão de deslocamento redefinida como `km_total ÷ km_exigido_atendido`; campos `km_exigido` e `km_exigido_atendido` no resumo; fração atendida e deslocamento de acesso documentados; Q3 resolvida. Mantida a versão 0.1.0 porque nenhuma implementação dependia ainda do contrato. |
 | 0.1.0 (motor) | 2026-11-13 | Preparação para o motor: `planejar()` parte do plano de cobertura; `sessoes_partem_da_base` no lugar de `retornar_a_partida`; `velocidade_deslocamento_kmh`; segmentos com `na_area`, `fracao_com_imagem` e `fracao_atual`; regra provisória de cobertura parcial; divisão das vias em segmentos e formato de id; regras R14 e R15; R6, R8, R10 e R13 ampliadas; Q6 resolvida; instância de teste no Jardim Primavera. Mantida a versão 0.1.0. |
+| 0.1.1 | 2026-11-13 | Contrato empacotado como `captura_contrato` (pacote Python instalável, com o esquema e o exemplo como recursos do pacote e o comando `validar-plano`); separação entre versão do formato e versão do pacote. O formato não mudou: continua 0.1.0. |

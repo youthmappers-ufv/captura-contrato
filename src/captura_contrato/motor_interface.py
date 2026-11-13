@@ -22,6 +22,7 @@ import copy
 import json
 import uuid
 from datetime import datetime, timezone
+from importlib.resources import files
 from pathlib import Path
 from typing import Callable, Literal, Mapping, Optional, Protocol
 
@@ -160,8 +161,8 @@ class MotorDeExemplo:
     versao = VERSAO_FORMATO
 
     def __init__(self, caminho: Path | None = None):
-        caminho = caminho or Path(__file__).with_name("exemplo-plano.geojson")
-        self._exemplo = json.loads(caminho.read_text(encoding="utf-8"))
+        recurso = caminho or files("captura_contrato") / "exemplo-plano.geojson"
+        self._exemplo = json.loads(recurso.read_text(encoding="utf-8"))
 
     def _novo(self) -> dict:
         plano = copy.deepcopy(self._exemplo)

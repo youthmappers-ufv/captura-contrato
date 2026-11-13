@@ -19,14 +19,12 @@ import json
 import os
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
 
-from validar_plano import validar
+from captura_contrato import carregar_exemplo, validar
 
-PASTA = Path(__file__).parent
-EXEMPLO = json.loads((PASTA / "exemplo-plano.geojson").read_text(encoding="utf-8"))
+EXEMPLO = carregar_exemplo()
 
 
 def feature(plano, tipo, id_):
@@ -36,6 +34,24 @@ def feature(plano, tipo, id_):
 
 def test_exemplo_e_valido():
     assert validar(EXEMPLO) == []
+
+
+def test_recursos_do_pacote():
+    # esquema e exemplo vão dentro do pacote instalado, e o exemplo segue o formato atual
+    from captura_contrato import VERSAO_FORMATO, carregar_esquema
+    assert carregar_esquema()["$id"].endswith("plano-captura.schema.json")
+    assert EXEMPLO["versao_formato"] == VERSAO_FORMATO
+    assert carregar_exemplo() is not carregar_exemplo()  # cópia nova a cada chamada
+
+
+def test_comando_validar_plano_instalado(tmp_path):
+    import shutil
+    comando = shutil.which("validar-plano")
+    if comando is None:
+        pytest.skip("pacote não instalado com o comando validar-plano")
+    arquivo = tmp_path / "p.geojson"
+    arquivo.write_text(json.dumps(EXEMPLO), encoding="utf-8")
+    assert subprocess.run([comando, str(arquivo)], capture_output=True).returncode == 0
 
 
 # --- estrutura e referências -------------------------------------------------
@@ -261,7 +277,7 @@ def test_camera_frontal_conta_os_dois_sentidos():
 
 def test_motor_de_exemplo_produz_planos_validos():
     # Modelo do teste que o TCC 1 roda contra qualquer motor (de exemplo ou real)
-    from motor_interface import MotorDeExemplo
+    from captura_contrato import MotorDeExemplo
     motor = MotorDeExemplo()
     cobertura = motor.analisar_cobertura({}, {})
     assert validar(cobertura) == []
@@ -274,14 +290,14 @@ def test_motor_de_exemplo_produz_planos_validos():
     {"parametros": {"idade_maxima_dias": 30}},     # parâmetro de cobertura não muda em planejar()
 ])
 def test_planejar_recusa_entradas_invalidas(entrada):
-    from motor_interface import MotorDeExemplo, ParametrosInvalidos
+    from captura_contrato import MotorDeExemplo, ParametrosInvalidos
     motor = MotorDeExemplo()
     with pytest.raises(ParametrosInvalidos):
         motor.planejar(motor.analisar_cobertura({}, {}), **entrada)
 
 
 def test_planejar_recusa_plano_que_nao_e_de_cobertura():
-    from motor_interface import MotorDeExemplo, ParametrosInvalidos
+    from captura_contrato import MotorDeExemplo, ParametrosInvalidos
     with pytest.raises(ParametrosInvalidos):
         MotorDeExemplo().planejar(copy.deepcopy(EXEMPLO))
 
@@ -398,19 +414,26 @@ def test_validador_recusa_defeito_de_modelagem(defeito, regra):
 def _cli(*argumentos, codificacao="utf-8"):
     ambiente = {**os.environ, "PYTHONIOENCODING": codificacao}
     ambiente.pop("PYTHONUTF8", None)
-    r = subprocess.run([sys.executable, str(PASTA / "validar_plano.py"), *map(str, argumentos)],
-                       capture_output=True, env=ambiente, cwd=PASTA)
+    r = subprocess.run([sys.executable, "-m", "captura_contrato.validar_plano", *map(str, argumentos)],
+                       capture_output=True, env=ambiente)
     return r.returncode, r.stdout.decode(codificacao, errors="replace"), r.stderr.decode(errors="replace")
 
 
-def test_cli_aceita_o_exemplo():
-    codigo, saida, _ = _cli("exemplo-plano.geojson")
+@pytest.fixture
+def arquivo_exemplo(tmp_path):
+    caminho = tmp_path / "exemplo-plano.geojson"
+    caminho.write_text(json.dumps(EXEMPLO, ensure_ascii=False), encoding="utf-8")
+    return caminho
+
+
+def test_cli_aceita_o_exemplo(arquivo_exemplo):
+    codigo, saida, _ = _cli(arquivo_exemplo)
     assert codigo == 0 and "plano válido" in saida
 
 
-def test_cli_funciona_com_saida_em_cp1252():
+def test_cli_funciona_com_saida_em_cp1252(arquivo_exemplo):
     # No Windows, a saída redirecionada usa cp1252, que não tem os símbolos ✓ e ✗
-    codigo, saida, erro = _cli("exemplo-plano.geojson", codificacao="cp1252")
+    codigo, saida, erro = _cli(arquivo_exemplo, codificacao="cp1252")
     assert codigo == 0, erro
     assert saida.startswith("OK ") and "plano válido" in saida
 
@@ -427,6 +450,6 @@ def test_cli_json_malformado(tmp_path):
     assert codigo == 1 and "[arquivo]" in saida and "Traceback" not in erro
 
 
-def test_cli_continua_apos_arquivo_ruim(tmp_path):
-    codigo, saida, _ = _cli(tmp_path / "nao-existe.geojson", "exemplo-plano.geojson")
+def test_cli_continua_apos_arquivo_ruim(tmp_path, arquivo_exemplo):
+    codigo, saida, _ = _cli(tmp_path / "nao-existe.geojson", arquivo_exemplo)
     assert codigo == 1 and "plano válido" in saida

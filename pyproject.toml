@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "captura-contrato"
+# Versão do PACOTE. A versão do FORMATO do plano é VERSAO_FORMATO (motor_interface.py).
+version = "0.1.1"
+description = "Contrato do plano de captura de imagens de rua (P13, Programa Youthmappers UFV): esquema, validador, exemplo e interface do motor."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Rodrigo Smarzaro" }]
+dependencies = ["jsonschema[format]>=4.18"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+validar-plano = "captura_contrato.validar_plano:principal"
+
+[project.urls]
+Repositorio = "https://github.com/youthmappers-ufv/captura-contrato"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+captura_contrato = ["*.json", "*.geojson"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
